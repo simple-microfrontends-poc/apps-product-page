@@ -49,6 +49,10 @@ export default {
       exposes: {
         "./App": "./src/App",
       },
+      remotes: {
+        categoryPicker:
+          "categoryPicker@http://localhost:3003/remoteEntry.js",
+      },
       shared: {
         react: { singleton: true, requiredVersion: deps.react },
         "react-dom": { singleton: true, requiredVersion: deps["react-dom"] },

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchProductById } from "./api";
+import { fetchProductById, fetchCategoryPath, updateProductCategory } from "./api";
 
 const API_BASE = "http://localhost:8000";
 
@@ -42,5 +42,62 @@ describe("fetchProductById", () => {
     );
 
     await expect(fetchProductById(999)).rejects.toThrow("HTTP 404: Not Found");
+  });
+});
+
+describe("fetchCategoryPath", () => {
+  beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("GETs /categories/:id/paths and returns the parsed breadcrumb", async () => {
+    const body = [
+      { id: 1, name: "Elektronika" },
+      { id: 11, name: "Smartfony i akcesoria" },
+    ];
+    vi.stubGlobal("fetch", mockFetchOnce(body));
+
+    const result = await fetchCategoryPath("11");
+
+    expect(fetch).toHaveBeenCalledWith(`${API_BASE}/categories/11/paths`);
+    expect(result).toEqual(body);
+  });
+
+  it("throws on a non-ok response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockFetchOnce(null, { ok: false, status: 404, statusText: "Not Found" }),
+    );
+
+    await expect(fetchCategoryPath("999")).rejects.toThrow("HTTP 404: Not Found");
+  });
+});
+
+describe("updateProductCategory", () => {
+  beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("PATCHes /products/:id with the category in the JSON body", async () => {
+    const body = { id: 1, sku: "A1", category: "5" };
+    vi.stubGlobal("fetch", mockFetchOnce(body));
+
+    const result = await updateProductCategory(1, "5");
+
+    expect(fetch).toHaveBeenCalledWith(`${API_BASE}/products/1`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: "5" }),
+    });
+    expect(result).toEqual(body);
+  });
+
+  it("throws on a non-ok response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockFetchOnce(null, { ok: false, status: 422, statusText: "Unprocessable Entity" }),
+    );
+
+    await expect(updateProductCategory(1, "999")).rejects.toThrow(
+      "HTTP 422: Unprocessable Entity",
+    );
   });
 });
