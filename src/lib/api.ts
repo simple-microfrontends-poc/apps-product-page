@@ -6,6 +6,7 @@ export interface Attribute {
 }
 
 export interface ProductOut {
+  id: number;
   sku: string;
   name: string;
   images: string[];
@@ -15,8 +16,8 @@ export interface ProductOut {
   gtin: string;
 }
 
-export async function fetchProductBySku(sku: string): Promise<ProductOut> {
-  const res = await fetch(`${API_BASE}/products/by-sku/${encodeURIComponent(sku)}`);
+export async function fetchProductById(id: number): Promise<ProductOut> {
+  const res = await fetch(`${API_BASE}/products/${id}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   return res.json();
 }

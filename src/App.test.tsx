@@ -1,20 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProductOut } from "./lib/api";
 
 vi.mock("./lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./lib/api")>();
-  return { ...actual, fetchProductBySku: vi.fn() };
+  return { ...actual, fetchProductById: vi.fn() };
 });
 
 import App from "./App";
-import { fetchProductBySku } from "./lib/api";
+import { fetchProductById } from "./lib/api";
 
-const mockFetch = vi.mocked(fetchProductBySku);
+const mockFetch = vi.mocked(fetchProductById);
 
 function makeProduct(overrides: Partial<ProductOut> = {}): ProductOut {
   return {
+    id: 1,
     sku: "A1",
     name: "Widget",
     gtin: "111",
@@ -29,7 +30,7 @@ function makeProduct(overrides: Partial<ProductOut> = {}): ProductOut {
 beforeEach(() => mockFetch.mockReset());
 
 describe("product-page App", () => {
-  it("shows the placeholder and does not fetch when no sku is given", () => {
+  it("shows the placeholder and does not fetch when no id is given", () => {
     render(<App />);
 
     expect(
@@ -38,33 +39,33 @@ describe("product-page App", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("fetches by sku and renders the product card", async () => {
+  it("fetches by id and renders the product card", async () => {
     mockFetch.mockResolvedValue(makeProduct({ name: "Super Widget" }));
 
-    render(<App sku="A1" />);
+    render(<App id={1} />);
 
     expect(await screen.findByText("Super Widget")).toBeInTheDocument();
-    expect(mockFetch).toHaveBeenCalledWith("A1");
+    expect(mockFetch).toHaveBeenCalledWith(1);
   });
 
   it("shows a spinner while loading", async () => {
     let resolve!: (v: ProductOut) => void;
     mockFetch.mockReturnValue(new Promise((r) => (resolve = r)));
 
-    const { container } = render(<App sku="A1" />);
+    const { container } = render(<App id={1} />);
     expect(container.querySelector(".animate-spin")).toBeInTheDocument();
 
     resolve(makeProduct());
     expect(await screen.findByText("Widget")).toBeInTheDocument();
   });
 
-  it("shows an error with the sku when the fetch fails", async () => {
+  it("shows an error with the id when the fetch fails", async () => {
     mockFetch.mockRejectedValue(new Error("HTTP 404: Not Found"));
 
-    render(<App sku="MISSING" />);
+    render(<App id={999} />);
 
     expect(await screen.findByText("Nie znaleziono produktu")).toBeInTheDocument();
-    expect(screen.getByText("MISSING")).toBeInTheDocument();
+    expect(screen.getByText("999")).toBeInTheDocument();
     expect(screen.getByText(/HTTP 404: Not Found/)).toBeInTheDocument();
   });
 
@@ -73,23 +74,23 @@ describe("product-page App", () => {
     const onBack = vi.fn();
     const user = userEvent.setup();
 
-    render(<App sku="A1" onBack={onBack} />);
+    render(<App id={1} onBack={onBack} />);
     await screen.findByText("Widget");
 
     await user.click(screen.getByRole("button", { name: /Powrot do listy/ }));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
-  it("refetches when the sku prop changes", async () => {
-    mockFetch.mockImplementation(async (sku: string) =>
-      makeProduct({ sku, name: `Product ${sku}` }),
+  it("refetches when the id prop changes", async () => {
+    mockFetch.mockImplementation(async (id: number) =>
+      makeProduct({ id, name: `Product ${id}` }),
     );
 
-    const { rerender } = render(<App sku="A1" />);
-    expect(await screen.findByText("Product A1")).toBeInTheDocument();
+    const { rerender } = render(<App id={1} />);
+    expect(await screen.findByText("Product 1")).toBeInTheDocument();
 
-    rerender(<App sku="B2" />);
-    expect(await screen.findByText("Product B2")).toBeInTheDocument();
-    expect(mockFetch).toHaveBeenCalledWith("B2");
+    rerender(<App id={2} />);
+    expect(await screen.findByText("Product 2")).toBeInTheDocument();
+    expect(mockFetch).toHaveBeenCalledWith(2);
   });
 });

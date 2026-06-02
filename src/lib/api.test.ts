@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchProductBySku } from "./api";
+import { fetchProductById } from "./api";
 
 const API_BASE = "http://localhost:8000";
 
@@ -13,26 +13,26 @@ function mockFetchOnce(body: unknown, init?: Partial<Response>) {
   return vi.fn().mockResolvedValue(res);
 }
 
-describe("fetchProductBySku", () => {
+describe("fetchProductById", () => {
   beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("GETs /products/by-sku/:sku and returns the parsed body", async () => {
-    const body = { sku: "A1", name: "Widget" };
+  it("GETs /products/:id and returns the parsed body", async () => {
+    const body = { id: 1, sku: "A1", name: "Widget" };
     vi.stubGlobal("fetch", mockFetchOnce(body));
 
-    const result = await fetchProductBySku("A1");
+    const result = await fetchProductById(1);
 
-    expect(fetch).toHaveBeenCalledWith(`${API_BASE}/products/by-sku/A1`);
+    expect(fetch).toHaveBeenCalledWith(`${API_BASE}/products/1`);
     expect(result).toEqual(body);
   });
 
-  it("URL-encodes the SKU", async () => {
+  it("interpolates the numeric id into the URL", async () => {
     vi.stubGlobal("fetch", mockFetchOnce({}));
 
-    await fetchProductBySku("a/b c");
+    await fetchProductById(42);
 
-    expect(fetch).toHaveBeenCalledWith(`${API_BASE}/products/by-sku/a%2Fb%20c`);
+    expect(fetch).toHaveBeenCalledWith(`${API_BASE}/products/42`);
   });
 
   it("throws on a non-ok response", async () => {
@@ -41,6 +41,6 @@ describe("fetchProductBySku", () => {
       mockFetchOnce(null, { ok: false, status: 404, statusText: "Not Found" }),
     );
 
-    await expect(fetchProductBySku("nope")).rejects.toThrow("HTTP 404: Not Found");
+    await expect(fetchProductById(999)).rejects.toThrow("HTTP 404: Not Found");
   });
 });

@@ -5,6 +5,7 @@ import { ProductOut } from "../lib/api";
 
 function makeProduct(overrides: Partial<ProductOut> = {}): ProductOut {
   return {
+    id: 1,
     sku: "A1",
     name: "Widget",
     gtin: "111",

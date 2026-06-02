@@ -1,29 +1,29 @@
 import React, { useEffect, useState } from "react";
 import "./styles/index.css";
-import { fetchProductBySku, ProductOut } from "./lib/api";
+import { fetchProductById, ProductOut } from "./lib/api";
 import ProductCard from "./components/ProductCard";
 
 export interface ProductPageProps {
-  /** SKU of the product to display. Provided by the host on navigation. */
-  sku?: string;
+  /** ID of the product to display. Provided by the host on navigation. */
+  id?: number;
   /** Optional handler to return to the previous view (e.g. the product list). */
   onBack?: () => void;
 }
 
-function App({ sku, onBack }: ProductPageProps) {
+function App({ id, onBack }: ProductPageProps) {
   const [product, setProduct] = useState<ProductOut | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sku) {
+    if (id == null) {
       setProduct(null);
       return;
     }
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetchProductBySku(sku)
+    fetchProductById(id)
       .then((data) => {
         if (!cancelled) setProduct(data);
       })
@@ -36,7 +36,7 @@ function App({ sku, onBack }: ProductPageProps) {
     return () => {
       cancelled = true;
     };
-  }, [sku]);
+  }, [id]);
 
   return (
     <div className="max-w-3xl">
@@ -49,7 +49,7 @@ function App({ sku, onBack }: ProductPageProps) {
         </button>
       )}
 
-      {!sku ? (
+      {id == null ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center text-gray-400">
           Wybierz produkt z listy, aby zobaczyć jego kartę.
         </div>
@@ -61,7 +61,7 @@ function App({ sku, onBack }: ProductPageProps) {
         <div className="bg-white rounded-lg border border-red-200 p-6">
           <h3 className="text-red-700 font-medium">Nie znaleziono produktu</h3>
           <p className="text-red-600 text-sm mt-1">
-            SKU <span className="font-mono">{sku}</span> — {error}
+            ID <span className="font-mono">{id}</span> — {error}
           </p>
         </div>
       ) : product ? (
