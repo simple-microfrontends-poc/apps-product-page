@@ -142,6 +142,19 @@ describe("product-page App — change category", () => {
     expect(await screen.findByTestId("category-picker-stub")).toBeInTheDocument();
   });
 
+  it("passes the product's category to the picker as categoryId", async () => {
+    mockFetch.mockResolvedValue(makeProduct({ category: "1151" }));
+    const user = userEvent.setup();
+
+    render(<App id={1} />);
+    await screen.findByText("Widget");
+
+    await user.click(screen.getByRole("button", { name: "Zmień" }));
+    const picker = await screen.findByTestId("category-picker-stub");
+
+    expect(within(picker).getByText("cat:1151")).toBeInTheDocument();
+  });
+
   it("optimistically applies the new category, PATCHes, then reconciles via GET", async () => {
     // Initial load, then the reconcile GET after the PATCH (STUB_SELECTION.id = 5).
     mockFetch

@@ -48,9 +48,11 @@ class PickerErrorBoundary extends React.Component<
 }
 
 function CategoryPickerModal({
+  categoryId,
   onSelect,
   onClose,
 }: {
+  categoryId?: number;
   onSelect: (selection: CategorySelection) => void;
   onClose: () => void;
 }) {
@@ -77,6 +79,7 @@ function CategoryPickerModal({
             }
           >
             <CategoryPicker
+              categoryId={categoryId}
               selectionMode="leaf"
               confirmLabel="Zmień kategorię"
               title="Wybierz nową kategorię"
@@ -199,6 +202,7 @@ function App({ id, onBack }: ProductPageProps) {
 
       {pickerOpen && (
         <CategoryPickerModal
+          categoryId={product ? Number(product.category) : undefined}
           onSelect={handleCategorySelect}
           onClose={() => setPickerOpen(false)}
         />
